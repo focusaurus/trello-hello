@@ -61,29 +61,14 @@ func (t *trello) ListBoards() ([]Board, error) {
 	path := "/1/members/me/boards"
 	boards := make([]Board, 0)
 	err := t.getJSON(path, query, &boards)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ListBoards err1: %s", err)
-		return nil, err
-	}
 	return boards, err
 }
 
 func (t *trello) ListCards(list List) ([]Card, error) {
 	query := url.Values{}
-	query.Set("key", t.key)
-	query.Set("token", t.token)
-	res, err := http.Get(t.baseURL + "/1/lists/" + list.Id + "/cards?" + query.Encode())
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
+	path := "/1/lists/" + list.Id + "/cards"
 	cards := make([]Card, 0)
-	bytes, err := io.ReadAll(res.Body)
-	// os.Stdout.Write(bytes)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(bytes, &cards)
+	err := t.getJSON(path, query, &cards)
 	return cards, err
 }
 
@@ -117,12 +102,6 @@ func main() {
 			for _, card := range cards {
 				fmt.Printf("    🪧%s (%s)\n", card.Name, card.Id)
 			}
-
 		}
 	}
-	// _, err = io.Copy(os.Stdout, res.Body)
-	// if err != nil {
-	// 	fmt.Printf("Error copying response body: %s", err)
-	// 	return
-	// }
 }
