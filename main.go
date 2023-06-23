@@ -29,44 +29,49 @@ type Card struct {
 
 type trello struct {
 	baseURL string
+	key     string
+	token   string
+}
+
+func (t *trello) getJSON(path string, query url.Values, decodeTo any) error {
+	query.Set("key", t.key)
+	query.Set("token", t.token)
+	res, err := http.Get(t.baseURL + path + "?" + query.Encode())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "getJSON err1: %s", err)
+		return err
+	}
+	defer res.Body.Close()
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "getJSON err2: %s", err)
+		return err
+	}
+	// os.Stdout.Write(bytes)
+	return json.Unmarshal(bytes, decodeTo)
 }
 
 func (t *trello) ListBoards() ([]Board, error) {
-	key := os.Getenv("KEY")
-	token := os.Getenv("TOKEN")
 	query := url.Values{}
 	query.Set("filter", "open")
 	query.Set("fields", "id,name,lists")
 	query.Set("lists", "open")
 	query.Set("list_fields", "id,name")
-	query.Set("key", key)
-	query.Set("token", token)
-	res, err := http.Get(t.baseURL + "/1/members/me/boards?" + query.Encode())
+
+	path := "/1/members/me/boards"
+	boards := make([]Board, 0)
+	err := t.getJSON(path, query, &boards)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ListBoards err1: %s", err)
 		return nil, err
 	}
-	defer res.Body.Close()
-	boards := make([]Board, 0)
-	bytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ListBoards err2: %s", err)
-		return nil, err
-	}
-	// os.Stdout.Write(bytes)
-	err = json.Unmarshal(bytes, &boards)
 	return boards, err
 }
 
 func (t *trello) ListCards(list List) ([]Card, error) {
-	key := os.Getenv("KEY")
-	token := os.Getenv("TOKEN")
 	query := url.Values{}
-	query.Set("key", key)
-	query.Set("token", token)
-	// query.Set("filter", "open")
-	// query.Set("cards", "open")
-	// query.Set("card_fields", "name")
+	query.Set("key", t.key)
+	query.Set("token", t.token)
 	res, err := http.Get(t.baseURL + "/1/lists/" + list.Id + "/cards?" + query.Encode())
 	if err != nil {
 		return nil, err
@@ -83,7 +88,11 @@ func (t *trello) ListCards(list List) ([]Card, error) {
 }
 
 func newTrello(baseURL string) trello {
-	return trello{baseURL}
+	return trello{
+		baseURL: baseURL,
+		key:     os.Getenv("KEY"),
+		token:   os.Getenv("TOKEN"),
+	}
 }
 
 func main() {
