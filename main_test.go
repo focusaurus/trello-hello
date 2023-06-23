@@ -9,6 +9,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewTrello(t *testing.T) {
+	base := "https://unittestbaseurl"
+	key := "unittestkey"
+	token := "unittesttoken"
+	t.Setenv("KEY", key)
+	t.Setenv("TOKEN", token)
+	trello := newTrello(base)
+	assert.Equal(t, trello.baseURL, base)
+	assert.Equal(t, trello.key, key)
+	assert.Equal(t, trello.token, token)
+}
+
 func TestListBoards(t *testing.T) {
 	tests := map[string]struct {
 		res      string
