@@ -28,7 +28,7 @@ func TestListBoards(t *testing.T) {
 	}{
 		"empty response": {
 			res: "[]",
-			// expected: []Board{{Name: "foo", Id: "bar"}, {Name: "foo2", Id: "blah"}},
+			// expected: []Board{{Name: "foo", ID: "bar"}, {Name: "foo2", ID: "blah"}},
 			expected: []Board{},
 		},
 		"base case": {
@@ -42,7 +42,7 @@ func TestListBoards(t *testing.T) {
 			"id":"abcd2"
 			}]`,
 			expected: []Board{
-				{Name: "Boardy", Id: "abcd1", Lists: []List{{Id: "listb1l1", Name: "List B1L1"}}},
+				{Name: "Boardy", Id: "abcd1", Lists: []Row{{ID: "listb1l1", Name: "List B1L1"}}},
 				{Name: "B2", Id: "abcd2"},
 			},
 		},
@@ -73,17 +73,17 @@ func TestListBoards(t *testing.T) {
 func TestListCards(t *testing.T) {
 	tests := map[string]struct {
 		res      string
-		expected []Card
+		expected []Row
 	}{
 		"empty response": {
 			res:      "[]",
-			expected: []Card{},
+			expected: []Row{},
 		},
 		"base case": {
 			res: `[{"name": "Card 1", "id": "card1"}, {"name":"Card 2", "id":"card2"}]`,
-			expected: []Card{
-				{Name: "Card 1", Id: "card1"},
-				{Name: "Card 2", Id: "card2"},
+			expected: []Row{
+				{Name: "Card 1", ID: "card1"},
+				{Name: "Card 2", ID: "card2"},
 			},
 		},
 	}
@@ -100,7 +100,7 @@ func TestListCards(t *testing.T) {
 		}))
 		defer testServer.Close()
 		trello := newTrello(testServer.URL)
-		boards, err := trello.ListCards(List{Id: "list1"})
+		boards, err := trello.ListCards(Row{ID: "list1"})
 		assert.NoError(t, err)
 		assert.EqualValues(t, test.expected, boards)
 	}

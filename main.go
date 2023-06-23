@@ -11,20 +11,19 @@ import (
 	"regexp"
 )
 
+type Row struct {
+	ID   string `json:"id"`
+	Name string
+}
+
+func (r Row) String() string {
+	return r.Name
+}
+
 type Board struct {
 	Id    string
 	Name  string
-	Lists []List
-}
-
-type List struct {
-	Id   string
-	Name string
-}
-
-type Card struct {
-	Id   string
-	Name string
+	Lists []Row
 }
 
 type trello struct {
@@ -64,10 +63,10 @@ func (t *trello) ListBoards() ([]Board, error) {
 	return boards, err
 }
 
-func (t *trello) ListCards(list List) ([]Card, error) {
+func (t *trello) ListCards(list Row) ([]Row, error) {
 	query := url.Values{}
-	path := "/1/lists/" + list.Id + "/cards"
-	cards := make([]Card, 0)
+	path := "/1/lists/" + list.ID + "/cards"
+	cards := make([]Row, 0)
 	err := t.getJSON(path, query, &cards)
 	return cards, err
 }
@@ -94,13 +93,13 @@ func main() {
 				// if strings.Contains(list.Name, "Done") {
 				continue
 			}
-			fmt.Printf("  📃%s (%s)\n", list.Name, list.Id)
+			fmt.Printf("  📃%s\n", list)
 			cards, err := trello.ListCards(list)
 			if err != nil {
 				log.Fatalf("oops2: %s", err)
 			}
 			for _, card := range cards {
-				fmt.Printf("    🪧%s (%s)\n", card.Name, card.Id)
+				fmt.Printf("    🪧%s\n", card)
 			}
 		}
 	}
