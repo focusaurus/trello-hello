@@ -58,20 +58,20 @@ func TestListBoards(t *testing.T) {
 	}
 }
 
-func TestListLists(t *testing.T) {
+func TestListCards(t *testing.T) {
 	tests := map[string]struct {
 		res      string
-		expected []List
+		expected []Card
 	}{
 		"empty response": {
 			res:      "[]",
-			expected: []List{},
+			expected: []Card{},
 		},
 		"base case": {
-			res: `[{"name": "Listy1", "id": "abcd1"}, {"name":"Listy2", "id":"abcd2"}]`,
-			expected: []List{
-				{Name: "Listy1", Id: "abcd1"},
-				{Name: "Listy2", Id: "abcd2"},
+			res: `[{"name": "Card 1", "id": "card1"}, {"name":"Card 2", "id":"card2"}]`,
+			expected: []Card{
+				{Name: "Card 1", Id: "card1"},
+				{Name: "Card 2", Id: "card2"},
 			},
 		},
 	}
@@ -80,7 +80,7 @@ func TestListLists(t *testing.T) {
 			query := r.URL.Query()
 			assert.True(t, query.Has("key"))
 			assert.True(t, query.Has("token"))
-			strings.HasPrefix(r.URL.Path, "/1/boards/idboard1/lists")
+			strings.HasPrefix(r.URL.Path, "/1/lists/list1/cards")
 			responseBody := test.res
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -88,7 +88,7 @@ func TestListLists(t *testing.T) {
 		}))
 		defer testServer.Close()
 		trello := newTrello(testServer.URL)
-		boards, err := trello.ListLists(Board{Id: "idboard1"})
+		boards, err := trello.ListCards(List{Id: "list1"})
 		assert.NoError(t, err)
 		assert.EqualValues(t, test.expected, boards)
 	}

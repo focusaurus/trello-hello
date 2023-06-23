@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 )
 
 type Board struct {
@@ -17,6 +18,11 @@ type Board struct {
 }
 
 type List struct {
+	Id   string
+	Name string
+}
+
+type Card struct {
 	Id   string
 	Name string
 }
@@ -52,28 +58,28 @@ func (t *trello) ListBoards() ([]Board, error) {
 	return boards, err
 }
 
-func (t *trello) ListLists(board Board) ([]List, error) {
+func (t *trello) ListCards(list List) ([]Card, error) {
 	key := os.Getenv("KEY")
 	token := os.Getenv("TOKEN")
 	query := url.Values{}
-	query.Set("filter", "open")
 	query.Set("key", key)
 	query.Set("token", token)
-	query.Set("cards", "open")
-	query.Set("card_fields", "name")
-	res, err := http.Get(t.baseURL + "/1/boards/" + board.Id + "/lists?" + query.Encode())
+	// query.Set("filter", "open")
+	// query.Set("cards", "open")
+	// query.Set("card_fields", "name")
+	res, err := http.Get(t.baseURL + "/1/lists/" + list.Id + "/cards?" + query.Encode())
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-	lists := make([]List, 0)
+	cards := make([]Card, 0)
 	bytes, err := io.ReadAll(res.Body)
-	os.Stdout.Write(bytes)
+	// os.Stdout.Write(bytes)
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(bytes, &lists)
-	return lists, err
+	err = json.Unmarshal(bytes, &cards)
+	return cards, err
 }
 
 func newTrello(baseURL string) trello {
@@ -89,12 +95,20 @@ func main() {
 	}
 	for _, board := range boards {
 		fmt.Printf("📋%s (%s)\n", board.Name, board.Id)
-		// lists, err := trello.ListLists(board)
-		// if err != nil {
-		// 	log.Fatalf("oops2: %s", err)
-		// }
 		for _, list := range board.Lists {
-			fmt.Printf("\t📃%s (%s)\n", list.Name, list.Id)
+			if matched, _ := regexp.MatchString("To Do", list.Name); !matched {
+				// if strings.Contains(list.Name, "Done") {
+				continue
+			}
+			fmt.Printf("  📃%s (%s)\n", list.Name, list.Id)
+			cards, err := trello.ListCards(list)
+			if err != nil {
+				log.Fatalf("oops2: %s", err)
+			}
+			for _, card := range cards {
+				fmt.Printf("    🪧%s (%s)\n", card.Name, card.Id)
+			}
+
 		}
 	}
 	// _, err = io.Copy(os.Stdout, res.Body)
