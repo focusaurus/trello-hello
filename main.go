@@ -90,7 +90,7 @@ func main() {
 	for _, board := range boards {
 		fmt.Printf("📋%s (%s)\n", board.Name, board.Id)
 		for _, list := range board.Lists {
-			if matched, _ := regexp.MatchString("To Do", list.Name); !matched {
+			if matched, _ := regexp.MatchString("(To Do|Doing)", list.Name); !matched {
 				// if strings.Contains(list.Name, "Done") {
 				continue
 			}
