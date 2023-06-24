@@ -42,8 +42,8 @@ func TestListBoards(t *testing.T) {
 			"id":"abcd2"
 			}]`,
 			expected: []Board{
-				{Name: "Boardy", Id: "abcd1", Lists: []Row{{ID: "listb1l1", Name: "List B1L1"}}},
-				{Name: "B2", Id: "abcd2"},
+				{Row: Row{Name: "Boardy", ID: "abcd1"}, Lists: []Row{{ID: "listb1l1", Name: "List B1L1"}}},
+				{Row: Row{Name: "B2", ID: "abcd2"}},
 			},
 		},
 	}

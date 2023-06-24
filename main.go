@@ -21,8 +21,7 @@ func (r Row) String() string {
 }
 
 type Board struct {
-	Id    string
-	Name  string
+	Row
 	Lists []Row
 }
 
@@ -87,7 +86,7 @@ func main() {
 		log.Fatalf("oops1: %s", err)
 	}
 	for _, board := range boards {
-		fmt.Printf("📋%s (%s)\n", board.Name, board.Id)
+		fmt.Printf("📋%s\n", board)
 		for _, list := range board.Lists {
 			if matched, _ := regexp.MatchString("(To Do|Doing)", list.Name); !matched {
 				// if strings.Contains(list.Name, "Done") {
