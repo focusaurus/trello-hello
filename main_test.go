@@ -9,19 +9,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewTrello(t *testing.T) {
+const FAKE_KEY = "fakekey12345678901234567890"
+const FAKE_TOKEN = "faketoken12345678901234567890123456789012345678901234567890"
+
+func TestNewTrello_BaseCase(t *testing.T) {
 	base := "https://unittestbaseurl"
-	key := "unittestkey"
-	token := "unittesttoken"
-	t.Setenv("KEY", key)
-	t.Setenv("TOKEN", token)
-	trello := newTrello(base)
-	assert.Equal(t, trello.baseURL, base)
-	assert.Equal(t, trello.key, key)
-	assert.Equal(t, trello.token, token)
+	t.Setenv("KEY", FAKE_KEY)
+	t.Setenv("TOKEN", FAKE_TOKEN)
+	trello, err := newTrello(base)
+	assert.NoError(t, err)
+	assert.Equal(t, trello.BaseURL, base)
+	assert.Equal(t, trello.Key, FAKE_KEY)
+	assert.Equal(t, trello.Token, FAKE_TOKEN)
+}
+
+func TestFormatError(t *testing.T) {
+	t.Setenv("KEY", "")
+	t.Setenv("TOKEN", "")
+	_, err := newTrello("")
+	assert.Error(t, err)
+	message := formatError(err)
+	assert.Contains(t, message, "Invalid environment variable KEY")
+	assert.Contains(t, message, "Invalid environment variable TOKEN")
+	assert.Contains(t, message, "Please set your Trello API")
+
 }
 
 func TestListBoards(t *testing.T) {
+	t.Setenv("KEY", FAKE_KEY)
+	t.Setenv("TOKEN", FAKE_TOKEN)
 	tests := map[string]struct {
 		res      string
 		expected []Board
@@ -56,14 +72,15 @@ func TestListBoards(t *testing.T) {
 			assert.Equal(t, query.Get("fields"), "id,name,lists")
 			assert.Equal(t, query.Get("lists"), "open")
 			assert.Equal(t, query.Get("list_fields"), "id,name")
-			strings.HasPrefix(r.URL.Path, "/1/members/me/boards")
+			assert.True(t, strings.HasPrefix(r.URL.Path, "/1/members/me/boards"))
 			responseBody := test.res
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(responseBody))
 		}))
 		defer testServer.Close()
-		trello := newTrello(testServer.URL)
+		trello, err := newTrello(testServer.URL)
+		assert.NoError(t, err)
 		boards, err := trello.ListBoards()
 		assert.NoError(t, err)
 		assert.EqualValues(t, test.expected, boards)
@@ -71,6 +88,8 @@ func TestListBoards(t *testing.T) {
 }
 
 func TestListCards(t *testing.T) {
+	t.Setenv("KEY", FAKE_KEY)
+	t.Setenv("TOKEN", FAKE_TOKEN)
 	tests := map[string]struct {
 		res      string
 		expected []Row
@@ -92,14 +111,16 @@ func TestListCards(t *testing.T) {
 			query := r.URL.Query()
 			assert.True(t, query.Has("key"))
 			assert.True(t, query.Has("token"))
-			strings.HasPrefix(r.URL.Path, "/1/lists/list1/cards")
+			assert.True(t, strings.HasPrefix(r.URL.Path, "/1/lists/list1/cards"))
 			responseBody := test.res
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(responseBody))
 		}))
 		defer testServer.Close()
-		trello := newTrello(testServer.URL)
+		trello, err := newTrello(testServer.URL)
+		assert.NoError(t, err)
+
 		boards, err := trello.ListCards(Row{ID: "list1"})
 		assert.NoError(t, err)
 		assert.EqualValues(t, test.expected, boards)

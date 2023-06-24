@@ -9,6 +9,9 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type Row struct {
@@ -26,15 +29,15 @@ type Board struct {
 }
 
 type trello struct {
-	baseURL string
-	key     string
-	token   string
+	BaseURL string `validate:"min=7"`
+	Key     string `validate:"min=20"`
+	Token   string `validate:"min=50"`
 }
 
 func (t *trello) getJSON(path string, query url.Values, decodeTo any) error {
-	query.Set("key", t.key)
-	query.Set("token", t.token)
-	res, err := http.Get(t.baseURL + path + "?" + query.Encode())
+	query.Set("key", t.Key)
+	query.Set("token", t.Token)
+	res, err := http.Get(t.BaseURL + path + "?" + query.Encode())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "getJSON err1: %s", err)
 		return err
@@ -70,25 +73,48 @@ func (t *trello) ListCards(list Row) ([]Row, error) {
 	return cards, err
 }
 
-func newTrello(baseURL string) trello {
-	return trello{
-		baseURL: baseURL,
-		key:     os.Getenv("KEY"),
-		token:   os.Getenv("TOKEN"),
+func newTrello(baseURL string) (*trello, error) {
+	t := &trello{
+		BaseURL: baseURL,
+		Key:     os.Getenv("KEY"),
+		Token:   os.Getenv("TOKEN"),
 	}
+	validate := validator.New()
+	err := validate.Struct(t)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+func formatError(err error) string {
+	message := ""
+	if ve, ok := err.(validator.ValidationErrors); ok {
+		for _, e := range ve {
+			message += fmt.Sprintf("Invalid environment variable %s\n", strings.ToUpper(e.StructField()))
+		}
+	} else {
+		return err.Error()
+	}
+	return message + "Please set your Trello API KEY and TOKEN values as environment variables.\n"
 }
 
 func main() {
 	baseURL := "https://api.trello.com"
-	trello := newTrello(baseURL)
+	trello, err := newTrello(baseURL)
+	if err != nil {
+		fmt.Fprint(os.Stderr, formatError(err))
+		os.Exit(1)
+	}
 	boards, err := trello.ListBoards()
 	if err != nil {
 		log.Fatalf("oops1: %s", err)
 	}
+	doing := regexp.MustCompile("(To Do|Doing)")
 	for _, board := range boards {
 		fmt.Printf("📋%s\n", board)
 		for _, list := range board.Lists {
-			if matched, _ := regexp.MatchString("(To Do|Doing)", list.Name); !matched {
+			if !doing.MatchString(list.Name) {
 				// if strings.Contains(list.Name, "Done") {
 				continue
 			}
