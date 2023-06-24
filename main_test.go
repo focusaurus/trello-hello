@@ -9,8 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const FAKE_KEY = "fakekey12345678901234567890"
-const FAKE_TOKEN = "faketoken12345678901234567890123456789012345678901234567890"
+const (
+	FAKE_KEY   = "fakekey12345678901234567890"
+	FAKE_TOKEN = "faketoken12345678901234567890123456789012345678901234567890"
+)
 
 func TestNewTrello_BaseCase(t *testing.T) {
 	base := "https://unittestbaseurl"
@@ -125,4 +127,41 @@ func TestListCards(t *testing.T) {
 		assert.NoError(t, err)
 		assert.EqualValues(t, test.expected, boards)
 	}
+}
+
+func TestAPIUnauthorized(t *testing.T) {
+	t.Setenv("KEY", FAKE_KEY)
+	t.Setenv("TOKEN", FAKE_TOKEN)
+	responseBody := "Response body from trello"
+
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(responseBody))
+	}))
+	defer testServer.Close()
+	trello, err := newTrello(testServer.URL)
+	assert.NoError(t, err)
+
+	_, err = trello.ListCards(Row{ID: "list1"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), responseBody)
+}
+
+func TestAPIInvalidJSON(t *testing.T) {
+	t.Setenv("KEY", FAKE_KEY)
+	t.Setenv("TOKEN", FAKE_TOKEN)
+
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("this is not valid json"))
+	}))
+	defer testServer.Close()
+	trello, err := newTrello(testServer.URL)
+	assert.NoError(t, err)
+
+	_, err = trello.ListCards(Row{ID: "list1"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid JSON")
 }

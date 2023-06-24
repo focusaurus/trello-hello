@@ -44,12 +44,19 @@ func (t *trello) getJSON(path string, query url.Values, decodeTo any) error {
 	}
 	defer res.Body.Close()
 	bytes, err := io.ReadAll(res.Body)
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("error from Trello API: %s", string(bytes))
+	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "getJSON err2: %s", err)
 		return err
 	}
 	// os.Stdout.Write(bytes)
-	return json.Unmarshal(bytes, decodeTo)
+	err = json.Unmarshal(bytes, decodeTo)
+	if err != nil {
+		return fmt.Errorf("invalid JSON from Trello API: %s", err)
+	}
+	return nil
 }
 
 func (t *trello) ListBoards() ([]Board, error) {
@@ -108,7 +115,7 @@ func main() {
 	}
 	boards, err := trello.ListBoards()
 	if err != nil {
-		log.Fatalf("oops1: %s", err)
+		log.Fatalf(err.Error())
 	}
 	doing := regexp.MustCompile("(To Do|Doing)")
 	for _, board := range boards {
@@ -121,7 +128,7 @@ func main() {
 			fmt.Printf("  📃%s\n", list)
 			cards, err := trello.ListCards(list)
 			if err != nil {
-				log.Fatalf("oops2: %s", err)
+				log.Fatalf(err.Error())
 			}
 			for _, card := range cards {
 				fmt.Printf("    🪧%s\n", card)
