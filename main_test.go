@@ -217,17 +217,18 @@ func (t *mockTrello) ListCards(list Row) ([]Row, error) {
 	return t.cards, t.listCardsError
 }
 
+var fakeBoards = []Board{
+	{Row: Row{Name: "Boardy", ID: "abcd1"}, Lists: []Row{{ID: "To Do: listb1l1", Name: "Doing: List B1L1"}}},
+	{Row: Row{Name: "B2", ID: "abcd2"}, Lists: []Row{{ID: "skiplist1", Name: "Skip This List"}}},
+}
+var fakeCards = []Row{
+	{Name: "Card 1", ID: "card1"},
+	{Name: "Card 2", ID: "card2"},
+}
+
 func TestRunBaseCase(t *testing.T) {
-	boards := []Board{
-		{Row: Row{Name: "Boardy", ID: "abcd1"}, Lists: []Row{{ID: "To Do: listb1l1", Name: "Doing: List B1L1"}}},
-		{Row: Row{Name: "B2", ID: "abcd2"}, Lists: []Row{{ID: "skiplist1", Name: "Skip This List"}}},
-	}
-	cards := []Row{
-		{Name: "Card 1", ID: "card1"},
-		{Name: "Card 2", ID: "card2"},
-	}
 	out := bytes.NewBufferString("")
-	trello := &mockTrello{boards: boards, cards: cards}
+	trello := &mockTrello{boards: fakeBoards, cards: fakeCards}
 	err := run(trello, out)
 	assert.NoError(t, err)
 	outString := out.String()
@@ -237,4 +238,20 @@ func TestRunBaseCase(t *testing.T) {
 	assert.Contains(t, outString, "🪧Card 1")
 	assert.Contains(t, outString, "🪧Card 2")
 	assert.NotContains(t, outString, "Skip This List")
+}
+
+func TestRunErrors(t *testing.T) {
+	t.Run("ListBoards error", func(t *testing.T) {
+		trello := &mockTrello{listBoardsError: assert.AnError}
+		err := run(trello, bytes.NewBufferString(""))
+		assert.Error(t, err)
+		assert.Equal(t, err, assert.AnError)
+	})
+
+	t.Run("ListCards error", func(t *testing.T) {
+		trello := &mockTrello{boards: fakeBoards, listCardsError: assert.AnError}
+		err := run(trello, bytes.NewBufferString(""))
+		assert.Error(t, err)
+		assert.Equal(t, err, assert.AnError)
+	})
 }
