@@ -120,7 +120,6 @@ func run(trello trelloAPI, out io.Writer) error {
 		fmt.Fprintf(out, "📋%s\n", board)
 		for _, list := range board.Lists {
 			if !doing.MatchString(list.Name) {
-				// if strings.Contains(list.Name, "Done") {
 				continue
 			}
 			fmt.Fprintf(out, "  📃%s\n", list)
