@@ -172,3 +172,11 @@ func TestAPIInvalidJSON(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid JSON")
 }
+
+func TestAPIHTTPError(t *testing.T) {
+	trello, err := newTrello("this is not a valid URL")
+	assert.NoError(t, err)
+	_, err = trello.ListCards(Row{ID: "list1"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unsupported protocol scheme")
+}
