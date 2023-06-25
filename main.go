@@ -27,13 +27,18 @@ type Board struct {
 	Lists []Row
 }
 
-type trelloAPI struct {
+type trelloAPI interface {
+	ListBoards() ([]Board, error)
+	ListCards(list Row) ([]Row, error)
+}
+
+type trelloClient struct {
 	BaseURL string `validate:"min=7"`
 	Key     string `validate:"min=20"`
 	Token   string `validate:"min=50"`
 }
 
-func (t *trelloAPI) getJSON(path string, query url.Values, decodeTo any) error {
+func (t *trelloClient) getJSON(path string, query url.Values, decodeTo any) error {
 	query.Set("key", t.Key)
 	query.Set("token", t.Token)
 	res, err := http.Get(t.BaseURL + path + "?" + query.Encode())
@@ -58,7 +63,7 @@ func (t *trelloAPI) getJSON(path string, query url.Values, decodeTo any) error {
 	return nil
 }
 
-func (t *trelloAPI) ListBoards() ([]Board, error) {
+func (t *trelloClient) ListBoards() ([]Board, error) {
 	query := url.Values{}
 	query.Set("filter", "open")
 	query.Set("fields", "id,name,lists")
@@ -71,7 +76,7 @@ func (t *trelloAPI) ListBoards() ([]Board, error) {
 	return boards, err
 }
 
-func (t *trelloAPI) ListCards(list Row) ([]Row, error) {
+func (t *trelloClient) ListCards(list Row) ([]Row, error) {
 	query := url.Values{}
 	path := "/1/lists/" + list.ID + "/cards"
 	cards := make([]Row, 0)
@@ -79,8 +84,8 @@ func (t *trelloAPI) ListCards(list Row) ([]Row, error) {
 	return cards, err
 }
 
-func newTrello(baseURL string) (*trelloAPI, error) {
-	t := &trelloAPI{
+func newTrello(baseURL string) (trelloAPI, error) {
+	t := &trelloClient{
 		BaseURL: baseURL,
 		Key:     os.Getenv("KEY"),
 		Token:   os.Getenv("TOKEN"),
@@ -105,7 +110,7 @@ func formatError(err error) string {
 	return message + "Please set your Trello API KEY and TOKEN values as environment variables.\n"
 }
 
-func run(trello *trelloAPI, out io.Writer) error {
+func run(trello trelloAPI, out io.Writer) error {
 	boards, err := trello.ListBoards()
 	if err != nil {
 		return err
