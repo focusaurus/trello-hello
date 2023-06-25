@@ -180,3 +180,23 @@ func TestAPIHTTPError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "unsupported protocol scheme")
 }
+
+func TestAPIResponseIOError(t *testing.T) {
+	t.Setenv("KEY", FAKE_KEY)
+	t.Setenv("TOKEN", FAKE_TOKEN)
+
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		// Send inaccurate content length to force IO error when reading body
+		w.Header().Add("Content-Length", "1024")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("[]"))
+	}))
+	defer testServer.Close()
+	trello, err := newTrello(testServer.URL)
+	assert.NoError(t, err)
+
+	_, err = trello.ListCards(Row{ID: "list1"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unexpected EOF")
+}
