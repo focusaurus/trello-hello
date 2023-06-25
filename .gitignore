@@ -1,3 +1,4 @@
 /.env
 /sample-data
-/.trello-hello
+/trello-hello
+/cover.out
