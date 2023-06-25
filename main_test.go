@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -26,15 +27,21 @@ func TestNewTrello_BaseCase(t *testing.T) {
 }
 
 func TestFormatError(t *testing.T) {
-	t.Setenv("KEY", "")
-	t.Setenv("TOKEN", "")
-	_, err := newTrello("")
-	assert.Error(t, err)
-	message := formatError(err)
-	assert.Contains(t, message, "Invalid environment variable KEY")
-	assert.Contains(t, message, "Invalid environment variable TOKEN")
-	assert.Contains(t, message, "Please set your Trello API")
+	t.Run("custom env var validation error messages", func(t *testing.T) {
+		t.Setenv("KEY", "")
+		t.Setenv("TOKEN", "")
+		_, err := newTrello("")
+		assert.Error(t, err)
+		message := formatError(err)
+		assert.Contains(t, message, "Invalid environment variable KEY")
+		assert.Contains(t, message, "Invalid environment variable TOKEN")
+		assert.Contains(t, message, "Please set your Trello API")
+	})
 
+	t.Run("error but not validation", func(t *testing.T) {
+		err := errors.New("foo")
+		assert.Equal(t, err.Error(), formatError(err))
+	})
 }
 
 func TestListBoards(t *testing.T) {
