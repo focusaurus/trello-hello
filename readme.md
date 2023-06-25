@@ -11,3 +11,5 @@
 - [x] error message if missing config
 - [x] handle invalid API credentials error cleanly
 - [x] unit tests for API error cases, invalid json
+- [x] full coverage for getJSON
+- [ ] extract code out of main() and get test coverage

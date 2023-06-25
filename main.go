@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -28,13 +27,13 @@ type Board struct {
 	Lists []Row
 }
 
-type trello struct {
+type trelloAPI struct {
 	BaseURL string `validate:"min=7"`
 	Key     string `validate:"min=20"`
 	Token   string `validate:"min=50"`
 }
 
-func (t *trello) getJSON(path string, query url.Values, decodeTo any) error {
+func (t *trelloAPI) getJSON(path string, query url.Values, decodeTo any) error {
 	query.Set("key", t.Key)
 	query.Set("token", t.Token)
 	res, err := http.Get(t.BaseURL + path + "?" + query.Encode())
@@ -59,7 +58,7 @@ func (t *trello) getJSON(path string, query url.Values, decodeTo any) error {
 	return nil
 }
 
-func (t *trello) ListBoards() ([]Board, error) {
+func (t *trelloAPI) ListBoards() ([]Board, error) {
 	query := url.Values{}
 	query.Set("filter", "open")
 	query.Set("fields", "id,name,lists")
@@ -72,7 +71,7 @@ func (t *trello) ListBoards() ([]Board, error) {
 	return boards, err
 }
 
-func (t *trello) ListCards(list Row) ([]Row, error) {
+func (t *trelloAPI) ListCards(list Row) ([]Row, error) {
 	query := url.Values{}
 	path := "/1/lists/" + list.ID + "/cards"
 	cards := make([]Row, 0)
@@ -80,8 +79,8 @@ func (t *trello) ListCards(list Row) ([]Row, error) {
 	return cards, err
 }
 
-func newTrello(baseURL string) (*trello, error) {
-	t := &trello{
+func newTrello(baseURL string) (*trelloAPI, error) {
+	t := &trelloAPI{
 		BaseURL: baseURL,
 		Key:     os.Getenv("KEY"),
 		Token:   os.Getenv("TOKEN"),
@@ -106,6 +105,32 @@ func formatError(err error) string {
 	return message + "Please set your Trello API KEY and TOKEN values as environment variables.\n"
 }
 
+func run(trello *trelloAPI, out io.Writer) error {
+	boards, err := trello.ListBoards()
+	if err != nil {
+		return err
+	}
+	doing := regexp.MustCompile("(To Do|Doing)")
+	for _, board := range boards {
+		fmt.Fprintf(out, "📋%s\n", board)
+		for _, list := range board.Lists {
+			if !doing.MatchString(list.Name) {
+				// if strings.Contains(list.Name, "Done") {
+				continue
+			}
+			fmt.Fprintf(out, "  📃%s\n", list)
+			cards, err := trello.ListCards(list)
+			if err != nil {
+				return err
+			}
+			for _, card := range cards {
+				fmt.Fprintf(out, "    🪧%s\n", card)
+			}
+		}
+	}
+	return nil
+}
+
 func main() {
 	baseURL := "https://api.trello.com"
 	trello, err := newTrello(baseURL)
@@ -113,26 +138,9 @@ func main() {
 		fmt.Fprint(os.Stderr, formatError(err))
 		os.Exit(1)
 	}
-	boards, err := trello.ListBoards()
+	err = run(trello, os.Stdout)
 	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	doing := regexp.MustCompile("(To Do|Doing)")
-	for _, board := range boards {
-		fmt.Printf("📋%s\n", board)
-		for _, list := range board.Lists {
-			if !doing.MatchString(list.Name) {
-				// if strings.Contains(list.Name, "Done") {
-				continue
-			}
-			fmt.Printf("  📃%s\n", list)
-			cards, err := trello.ListCards(list)
-			if err != nil {
-				log.Fatalf(err.Error())
-			}
-			for _, card := range cards {
-				fmt.Printf("    🪧%s\n", card)
-			}
-		}
+		fmt.Fprint(os.Stderr, formatError(err))
+		os.Exit(1)
 	}
 }
