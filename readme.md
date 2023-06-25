@@ -12,4 +12,6 @@
 - [x] handle invalid API credentials error cleanly
 - [x] unit tests for API error cases, invalid json
 - [x] full coverage for getJSON
-- [ ] extract code out of main() and get test coverage
+- [x] extract code out of main() and get test coverage
+- [ ] organize pkg for implementation and internal for interface and client application
+- [ ] move list filter regex into client application
