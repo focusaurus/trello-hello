@@ -62,6 +62,6 @@ func main() {
 	err = run(trello, os.Stdout)
 	if err != nil {
 		fmt.Fprint(os.Stderr, formatError(err))
-		os.Exit(1)
+		os.Exit(2)
 	}
 }

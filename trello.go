@@ -36,8 +36,7 @@ func (t *trelloClient) getJSON(path string, query url.Values, decodeTo any) erro
 	query.Set("token", t.Token)
 	res, err := http.Get(t.BaseURL + path + "?" + query.Encode())
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "getJSON err1: %s", err)
-		return err
+		return fmt.Errorf("error in getJSON http.Get %w", err)
 	}
 	defer res.Body.Close()
 	bytes, err := io.ReadAll(res.Body)
@@ -45,9 +44,9 @@ func (t *trelloClient) getJSON(path string, query url.Values, decodeTo any) erro
 		return fmt.Errorf("error from Trello API: %s", string(bytes))
 	}
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "getJSON err2: %s", err)
-		return err
+		return fmt.Errorf("error in getJSON io.ReadAll %w", err)
 	}
+	// Useful for debugging
 	// os.Stdout.Write(bytes)
 	err = json.Unmarshal(bytes, decodeTo)
 	if err != nil {
