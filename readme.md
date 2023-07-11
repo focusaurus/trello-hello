@@ -14,4 +14,5 @@
 - [x] full coverage for getJSON
 - [x] extract code out of main() and get test coverage
 - [ ] organize pkg for implementation and internal for interface and client application
+  - [ ] New() should return a TrelloClient struct not an interface
 - [ ] move list filter regex into client application
