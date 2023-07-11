@@ -55,7 +55,8 @@ func TestListBoards(t *testing.T) {
 			responseBody := test.res
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(responseBody))
+			_, err := w.Write([]byte(responseBody))
+			assert.NoError(t, err)
 		}))
 		defer testServer.Close()
 		trello, err := newTrello(testServer.URL)
@@ -94,7 +95,8 @@ func TestListCards(t *testing.T) {
 			responseBody := test.res
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(responseBody))
+			_, err := w.Write([]byte(responseBody))
+			assert.NoError(t, err)
 		}))
 		defer testServer.Close()
 		trello, err := newTrello(testServer.URL)
@@ -114,7 +116,8 @@ func TestAPIUnauthorized(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(responseBody))
+		_, err := w.Write([]byte(responseBody))
+		assert.NoError(t, err)
 	}))
 	defer testServer.Close()
 	trello, err := newTrello(testServer.URL)
@@ -132,7 +135,8 @@ func TestAPIInvalidJSON(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("this is not valid json"))
+		_, err := w.Write([]byte("this is not valid json"))
+		assert.NoError(t, err)
 	}))
 	defer testServer.Close()
 	trello, err := newTrello(testServer.URL)
@@ -162,7 +166,8 @@ func TestAPIResponseIOError(t *testing.T) {
 		// Send inaccurate content length to force IO error when reading body
 		w.Header().Add("Content-Length", "1024")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("[]"))
+		_, err := w.Write([]byte("[]"))
+		assert.NoError(t, err)
 	}))
 	defer testServer.Close()
 	trello, err := newTrello(testServer.URL)
