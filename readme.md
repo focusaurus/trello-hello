@@ -31,7 +31,7 @@ No, not really. It's too tied to my personal workflow and naming conventions. Bu
 ## Sample Output
 
 ```
-📋 Trip Planning
+📋Trip Planning
   📃Doing
     🪧Shop for travel umbrella
   📃To Do Soon
