@@ -15,8 +15,18 @@ This is mostly an exercise to learn some Go stuff. But it is useful to me, too. 
 
 I wanted to understand the pattern of a library exporting a struct and the application code that uses the library defines an interface for the subset of the external API actually used in this application, and that interface supports mocking for unit tests.
 
+## Is This Really for General Use?
+
+No, not really. It's too tied to my personal workflow and naming conventions. But you might be able to use it as an example when making something tailored to your workflow.
+
 ## Install and Run
 
+- clone this repo
+- Follow [the trello docs](https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/) to get an API Key and a token
+- set your API key as environment variable `KEY`
+- set your API token as environment variable `TOKEN`
+- Run with `go run .` or build a binary with `go build .` then `./trello-hello`
+- Copy the binary into your PATH if you like `sudo cp trello-hello /usr/local/bin`
 
 ## Sample Output
 
