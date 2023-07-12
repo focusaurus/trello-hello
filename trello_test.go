@@ -150,11 +150,11 @@ func TestAPIInvalidJSON(t *testing.T) {
 func TestAPIHTTPError(t *testing.T) {
 	t.Setenv("KEY", FAKE_KEY)
 	t.Setenv("TOKEN", FAKE_TOKEN)
-	trello, err := newTrello("this is not a valid URL")
+	trello, err := newTrello("https://nosuchhost424242")
 	assert.NoError(t, err)
 	_, err = trello.ListCards(Row{ID: "list1"})
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "unsupported protocol scheme")
+	assert.Contains(t, err.Error(), "no such host")
 }
 
 func TestAPIResponseIOError(t *testing.T) {
@@ -176,4 +176,9 @@ func TestAPIResponseIOError(t *testing.T) {
 	_, err = trello.ListCards(Row{ID: "list1"})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "unexpected EOF")
+}
+
+func TestNewTrello(t *testing.T) {
+	_, err := newTrello("imap://nothttp")
+	assert.Error(t, err)
 }

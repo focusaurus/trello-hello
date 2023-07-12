@@ -26,15 +26,21 @@ type Board struct {
 }
 
 type trelloClient struct {
-	BaseURL string `validate:"min=7"`
+	BaseURL string `validate:"http_url"`
 	Key     string `validate:"min=20"`
 	Token   string `validate:"min=50"`
 }
 
 func (t *trelloClient) getJSON(path string, query url.Values, decodeTo any) error {
+	apiURL, err := url.Parse(t.BaseURL)
+	if err != nil {
+		return err
+	}
 	query.Set("key", t.Key)
 	query.Set("token", t.Token)
-	res, err := http.Get(t.BaseURL + path + "?" + query.Encode())
+	apiURL = apiURL.JoinPath(path)
+	apiURL.RawQuery = query.Encode()
+	res, err := http.Get(apiURL.String())
 	if err != nil {
 		return fmt.Errorf("error in getJSON http.Get %w", err)
 	}
@@ -84,8 +90,5 @@ func newTrello(baseURL string) (*trelloClient, error) {
 	}
 	validate := validator.New()
 	err := validate.Struct(t)
-	if err != nil {
-		return nil, err
-	}
-	return t, nil
+	return t, err
 }
