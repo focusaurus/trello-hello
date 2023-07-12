@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -31,7 +32,7 @@ type trelloClient struct {
 	Token   string `validate:"min=50"`
 }
 
-func (t *trelloClient) getJSON(path string, query url.Values, decodeTo any) error {
+func (t *trelloClient) getJSON(ctx context.Context, path string, query url.Values, decodeTo any) error {
 	apiURL, err := url.Parse(t.BaseURL)
 	if err != nil {
 		return err
@@ -40,9 +41,13 @@ func (t *trelloClient) getJSON(path string, query url.Values, decodeTo any) erro
 	query.Set("token", t.Token)
 	apiURL = apiURL.JoinPath(path)
 	apiURL.RawQuery = query.Encode()
-	res, err := http.Get(apiURL.String())
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL.String(), nil)
 	if err != nil {
-		return fmt.Errorf("error in getJSON http.Get %w", err)
+		return fmt.Errorf("error in getJSON http.NewRequestWithContext %w", err)
+	}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("error in getJSON http.DefaultClient.Do %w", err)
 	}
 	defer res.Body.Close()
 	bytes, err := io.ReadAll(res.Body)
@@ -61,7 +66,7 @@ func (t *trelloClient) getJSON(path string, query url.Values, decodeTo any) erro
 	return nil
 }
 
-func (t *trelloClient) ListBoards() ([]Board, error) {
+func (t *trelloClient) ListBoards(ctx context.Context) ([]Board, error) {
 	query := url.Values{}
 	query.Set("filter", "open")
 	query.Set("fields", "id,name,lists")
@@ -70,15 +75,15 @@ func (t *trelloClient) ListBoards() ([]Board, error) {
 
 	path := "/1/members/me/boards"
 	boards := make([]Board, 0)
-	err := t.getJSON(path, query, &boards)
+	err := t.getJSON(ctx, path, query, &boards)
 	return boards, err
 }
 
-func (t *trelloClient) ListCards(list Row) ([]Row, error) {
+func (t *trelloClient) ListCards(ctx context.Context, list Row) ([]Row, error) {
 	query := url.Values{}
 	path := "/1/lists/" + list.ID + "/cards"
 	cards := make([]Row, 0)
-	err := t.getJSON(path, query, &cards)
+	err := t.getJSON(ctx, path, query, &cards)
 	return cards, err
 }
 

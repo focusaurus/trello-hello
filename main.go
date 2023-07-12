@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -11,8 +12,8 @@ import (
 )
 
 type trelloAPI interface {
-	ListBoards() ([]Board, error)
-	ListCards(list Row) ([]Row, error)
+	ListBoards(ctx context.Context) ([]Board, error)
+	ListCards(ctx context.Context, list Row) ([]Row, error)
 }
 
 func formatError(err error) string {
@@ -28,7 +29,8 @@ func formatError(err error) string {
 }
 
 func run(trello trelloAPI, out io.Writer) error {
-	boards, err := trello.ListBoards()
+	ctx := context.Background()
+	boards, err := trello.ListBoards(ctx)
 	if err != nil {
 		return err
 	}
@@ -40,7 +42,7 @@ func run(trello trelloAPI, out io.Writer) error {
 				continue
 			}
 			fmt.Fprintf(out, "  📃%s\n", list)
-			cards, err := trello.ListCards(list)
+			cards, err := trello.ListCards(ctx, list)
 			if err != nil {
 				return err
 			}

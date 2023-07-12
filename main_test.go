@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"testing"
 
@@ -33,11 +34,11 @@ type mockTrello struct {
 	cards           []Row
 }
 
-func (t *mockTrello) ListBoards() ([]Board, error) {
+func (t *mockTrello) ListBoards(ctx context.Context) ([]Board, error) {
 	return t.boards, t.listBoardsError
 }
 
-func (t *mockTrello) ListCards(list Row) ([]Row, error) {
+func (t *mockTrello) ListCards(ctx context.Context, list Row) ([]Row, error) {
 	return t.cards, t.listCardsError
 }
 

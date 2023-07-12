@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -61,7 +62,7 @@ func TestListBoards(t *testing.T) {
 		defer testServer.Close()
 		trello, err := newTrello(testServer.URL)
 		assert.NoError(t, err)
-		boards, err := trello.ListBoards()
+		boards, err := trello.ListBoards(context.Background())
 		assert.NoError(t, err)
 		assert.EqualValues(t, test.expected, boards)
 	}
@@ -102,7 +103,7 @@ func TestListCards(t *testing.T) {
 		trello, err := newTrello(testServer.URL)
 		assert.NoError(t, err)
 
-		boards, err := trello.ListCards(Row{ID: "list1"})
+		boards, err := trello.ListCards(context.Background(), Row{ID: "list1"})
 		assert.NoError(t, err)
 		assert.EqualValues(t, test.expected, boards)
 	}
@@ -123,7 +124,7 @@ func TestAPIUnauthorized(t *testing.T) {
 	trello, err := newTrello(testServer.URL)
 	assert.NoError(t, err)
 
-	_, err = trello.ListCards(Row{ID: "list1"})
+	_, err = trello.ListCards(context.Background(), Row{ID: "list1"})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), responseBody)
 }
@@ -142,7 +143,7 @@ func TestAPIInvalidJSON(t *testing.T) {
 	trello, err := newTrello(testServer.URL)
 	assert.NoError(t, err)
 
-	_, err = trello.ListCards(Row{ID: "list1"})
+	_, err = trello.ListCards(context.Background(), Row{ID: "list1"})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid JSON")
 }
@@ -152,7 +153,7 @@ func TestAPIHTTPError(t *testing.T) {
 	t.Setenv("TOKEN", fakeToken)
 	trello, err := newTrello("https://nosuchhost424242")
 	assert.NoError(t, err)
-	_, err = trello.ListCards(Row{ID: "list1"})
+	_, err = trello.ListCards(context.Background(), Row{ID: "list1"})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "no such host")
 }
@@ -173,7 +174,7 @@ func TestAPIResponseIOError(t *testing.T) {
 	trello, err := newTrello(testServer.URL)
 	assert.NoError(t, err)
 
-	_, err = trello.ListCards(Row{ID: "list1"})
+	_, err = trello.ListCards(context.Background(), Row{ID: "list1"})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "unexpected EOF")
 }
