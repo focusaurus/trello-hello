@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	FAKE_KEY   = "fakekey12345678901234567890"
-	FAKE_TOKEN = "faketoken12345678901234567890123456789012345678901234567890"
+	fakeKey   = "fakekey12345678901234567890"
+	fakeToken = "faketoken12345678901234567890123456789012345678901234567890"
 )
 
 func TestListBoards(t *testing.T) {
-	t.Setenv("KEY", FAKE_KEY)
-	t.Setenv("TOKEN", FAKE_TOKEN)
+	t.Setenv("KEY", fakeKey)
+	t.Setenv("TOKEN", fakeToken)
 	tests := map[string]struct {
 		res      string
 		expected []Board
@@ -68,8 +68,8 @@ func TestListBoards(t *testing.T) {
 }
 
 func TestListCards(t *testing.T) {
-	t.Setenv("KEY", FAKE_KEY)
-	t.Setenv("TOKEN", FAKE_TOKEN)
+	t.Setenv("KEY", fakeKey)
+	t.Setenv("TOKEN", fakeToken)
 	tests := map[string]struct {
 		res      string
 		expected []Row
@@ -109,8 +109,8 @@ func TestListCards(t *testing.T) {
 }
 
 func TestAPIUnauthorized(t *testing.T) {
-	t.Setenv("KEY", FAKE_KEY)
-	t.Setenv("TOKEN", FAKE_TOKEN)
+	t.Setenv("KEY", fakeKey)
+	t.Setenv("TOKEN", fakeToken)
 	responseBody := "Response body from trello"
 
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -129,8 +129,8 @@ func TestAPIUnauthorized(t *testing.T) {
 }
 
 func TestAPIInvalidJSON(t *testing.T) {
-	t.Setenv("KEY", FAKE_KEY)
-	t.Setenv("TOKEN", FAKE_TOKEN)
+	t.Setenv("KEY", fakeKey)
+	t.Setenv("TOKEN", fakeToken)
 
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
@@ -148,8 +148,8 @@ func TestAPIInvalidJSON(t *testing.T) {
 }
 
 func TestAPIHTTPError(t *testing.T) {
-	t.Setenv("KEY", FAKE_KEY)
-	t.Setenv("TOKEN", FAKE_TOKEN)
+	t.Setenv("KEY", fakeKey)
+	t.Setenv("TOKEN", fakeToken)
 	trello, err := newTrello("https://nosuchhost424242")
 	assert.NoError(t, err)
 	_, err = trello.ListCards(Row{ID: "list1"})
@@ -158,8 +158,8 @@ func TestAPIHTTPError(t *testing.T) {
 }
 
 func TestAPIResponseIOError(t *testing.T) {
-	t.Setenv("KEY", FAKE_KEY)
-	t.Setenv("TOKEN", FAKE_TOKEN)
+	t.Setenv("KEY", fakeKey)
+	t.Setenv("TOKEN", fakeToken)
 
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
