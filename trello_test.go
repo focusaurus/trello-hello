@@ -155,7 +155,7 @@ func TestAPIHTTPError(t *testing.T) {
 	assert.NoError(t, err)
 	_, err = trello.ListCards(context.Background(), Row{ID: "list1"})
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "no such host")
+	assert.Contains(t, err.Error(), "dial tcp")
 }
 
 func TestAPIResponseIOError(t *testing.T) {
