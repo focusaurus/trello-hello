@@ -12,7 +12,7 @@ import (
 )
 
 type Row struct {
-	ID   string `json:"id"`
+	ID   string
 	Name string
 }
 
